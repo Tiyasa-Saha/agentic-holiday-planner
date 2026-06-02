@@ -1,0 +1,32 @@
+[
+  {
+    "flight_id": "FL001",
+    "airline": "Delta Airlines",
+    "from_city": "Boston",
+    "to_city": "Miami",
+    "departure_time": "08:00 AM",
+    "arrival_time": "11:30 AM",
+    "price": 220,
+    "stops": 0
+  },
+  {
+    "flight_id": "FL002",
+    "airline": "American Airlines",
+    "from_city": "Boston",
+    "to_city": "Miami",
+    "departure_time": "02:00 PM",
+    "arrival_time": "06:15 PM",
+    "price": 180,
+    "stops": 1
+  },
+  {
+    "flight_id": "FL003",
+    "airline": "JetBlue",
+    "from_city": "Boston",
+    "to_city": "Miami",
+    "departure_time": "06:30 AM",
+    "arrival_time": "10:05 AM",
+    "price": 250,
+    "stops": 0
+  }
+]
