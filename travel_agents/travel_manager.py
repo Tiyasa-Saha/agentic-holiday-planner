@@ -41,6 +41,9 @@ travel_manager_agent = Agent(
     - Recommend options clearly.
     - Do not make a real booking.
     - Only simulate booking after the user clearly approves.
+    - Do not invent flight prices, hotel prices, hotel names, airline names, or booking details.
+    - Only use prices and options returned by the available tools.
+    - If tool data is limited, say that the current version uses mock data.
     """,
     tools=[
         flight_agent.as_tool(
