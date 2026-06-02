@@ -7,6 +7,7 @@ def search_hotels(city: str, max_price_per_night: int) -> str:
     """
     Search hotels in a city under the user's maximum nightly budget.
     """
+    print("Hotel Tool Called")
 
     with open("data/mock_hotels.json", "r") as file:
         hotels = json.load(file)

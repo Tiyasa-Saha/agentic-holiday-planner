@@ -8,6 +8,8 @@ def search_flights(from_city: str, to_city: str) -> str:
     Search available flights from one city to another using mock flight data.
     """
 
+    print("Flight Tool Called")
+
     with open("data/mock_flights.json", "r") as file:
         flights = json.load(file)
 
