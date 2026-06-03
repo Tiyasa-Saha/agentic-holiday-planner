@@ -5,6 +5,7 @@ from agents import Runner
 from travel_agents.request_parser_agent import request_parser_agent
 from travel_agents.travel_manager import travel_manager_agent
 from memory.session_memory import SessionMemory
+from tools.recommendation_tools import get_best_mock_trip
 
 
 load_dotenv()
@@ -27,18 +28,22 @@ def chat_with_agent(message, history):
     parsed_result = Runner.run_sync(request_parser_agent, parser_input)
     travel_request = parsed_result.final_output
 
-    # Temporary selected-trip memory for mock data version.
-    # Later, we will make this dynamic based on the actual recommendation.
-    if (
-        travel_request.origin.lower() == "boston"
-        and travel_request.destination.lower() == "miami"
-    ):
+    best_trip = get_best_mock_trip(
+        origin=travel_request.origin,
+        destination=travel_request.destination,
+        hotel_budget_per_night=travel_request.hotel_budget_per_night,
+        number_of_nights=travel_request.number_of_nights,
+        total_budget=travel_request.budget
+    )
+
+    if best_trip:
         session_memory.save_selected_trip(
-            flight_id="FL001",
-            hotel_id="HT001"
+            flight_id=best_trip["flight_id"],
+            hotel_id=best_trip["hotel_id"]
         )
 
     selected_trip = session_memory.get_selected_trip()
+    best_trip_details = best_trip if best_trip else "No best trip selected from mock data."
 
     manager_input = f"""
     The user wants help planning a trip.
@@ -54,6 +59,9 @@ def chat_with_agent(message, history):
 
     Selected trip for booking, if available:
     {selected_trip}
+
+    Best mock trip selected by app-side recommendation logic:
+    {best_trip_details}
 
     If the user asks to book the recommended option and selected_trip has a flight_id and hotel_id,
     use those IDs for the simulated booking.
