@@ -44,6 +44,13 @@ travel_manager_agent = Agent(
     - Do not invent flight prices, hotel prices, hotel names, airline names, or booking details.
     - Only use prices and options returned by the available tools.
     - If tool data is limited, say that the current version uses mock data.
+    - Treat mock flight prices as one-way unless the data clearly says round-trip.
+    - If planning a round-trip, double the flight price when calculating total flight cost.
+    - When recommending flights and hotels, include their flight_id and hotel_id.
+    - If the user asks to book, confirm which flight_id and hotel_id are being booked.
+    - Use the Booking Agent only after the user clearly approves.
+    - Never ask for payment details.
+    - Always state that booking is simulated.
     """,
     tools=[
         flight_agent.as_tool(

@@ -46,3 +46,19 @@ class SessionMemory:
             summary_lines.append(f"- {key}: {value}")
 
         return "\n".join(summary_lines)
+    
+    def save_selected_trip(self, flight_id: str, hotel_id: str):
+        self.preferences["selected_flight_id"] = flight_id
+        self.preferences["selected_hotel_id"] = hotel_id
+
+    def has_selected_trip(self) -> bool:
+        return (
+            "selected_flight_id" in self.preferences
+            and "selected_hotel_id" in self.preferences
+        )
+
+    def get_selected_trip(self) -> dict:
+        return {
+            "flight_id": self.preferences.get("selected_flight_id"),
+            "hotel_id": self.preferences.get("selected_hotel_id"),
+        }

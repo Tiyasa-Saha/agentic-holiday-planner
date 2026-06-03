@@ -27,14 +27,36 @@ def chat_with_agent(message, history):
     parsed_result = Runner.run_sync(request_parser_agent, parser_input)
     travel_request = parsed_result.final_output
 
+    # Temporary selected-trip memory for mock data version.
+    # Later, we will make this dynamic based on the actual recommendation.
+    if (
+        travel_request.origin.lower() == "boston"
+        and travel_request.destination.lower() == "miami"
+    ):
+        session_memory.save_selected_trip(
+            flight_id="FL001",
+            hotel_id="HT001"
+        )
+
+    selected_trip = session_memory.get_selected_trip()
+
     manager_input = f"""
     The user wants help planning a trip.
+
+    Latest user message:
+    {message}
 
     Use this structured travel request:
     {travel_request.model_dump_json(indent=2)}
 
     Saved user preferences:
     {memory_summary}
+
+    Selected trip for booking, if available:
+    {selected_trip}
+
+    If the user asks to book the recommended option and selected_trip has a flight_id and hotel_id,
+    use those IDs for the simulated booking.
 
     Now create the best travel plan using the available specialist agents and tools.
     """
