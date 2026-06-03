@@ -5,6 +5,7 @@ from travel_agents.hotel_agent import hotel_agent
 from travel_agents.budget_agent import budget_agent
 from travel_agents.itinerary_agent import itinerary_agent
 from travel_agents.booking_agent import booking_agent
+from travel_agents.destination_research_agent import destination_research_agent
 
 
 travel_manager_agent = Agent(
@@ -51,6 +52,9 @@ travel_manager_agent = Agent(
     - Use the Booking Agent only after the user clearly approves.
     - Never ask for payment details.
     - Always state that booking is simulated.
+    - Use the Destination Research Agent when creating itinerary ideas, attraction suggestions, neighborhood recommendations, or destination travel tips.
+    - Do not use web research for final flight or hotel booking prices.
+    - Clearly separate mock booking data from web-researched destination suggestions.
     """,
     tools=[
         flight_agent.as_tool(
@@ -72,6 +76,10 @@ travel_manager_agent = Agent(
         booking_agent.as_tool(
             tool_name="simulate_trip_booking",
             tool_description="Simulate a booking only after user approval."
+        ),
+        destination_research_agent.as_tool(
+            tool_name="research_destination_information",
+            tool_description="Research current destination attractions, neighborhoods, local experiences, and travel tips."
         ),
     ],
 )
