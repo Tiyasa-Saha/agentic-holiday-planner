@@ -5,23 +5,77 @@ from agents import Runner
 from travel_agents.request_parser_agent import request_parser_agent
 from travel_agents.travel_manager import travel_manager_agent
 from memory.session_memory import SessionMemory
+from memory.sqlite_memory import SQLiteMemory
 from tools.recommendation_tools import get_best_mock_trip
 
 
 load_dotenv()
 
 session_memory = SessionMemory()
+sqlite_memory = SQLiteMemory()
 
 
-def chat_with_agent(message, history):
+def show_sqlite_memory(user_id):
+    if not user_id:
+        return "No user selected."
+
+    return sqlite_memory.format_preferences_for_agent(user_id)
+
+
+def save_user_preferences(
+    user_id,
+    flight_preference,
+    travel_style,
+    activity_preference,
+    hotel_budget,
+    total_budget
+):
+    if not user_id:
+        return "Please enter a user ID before saving preferences.", "No user selected."
+
+    sqlite_memory.save_preference(user_id, "flight_preference", flight_preference)
+    sqlite_memory.save_preference(user_id, "travel_style", travel_style)
+    sqlite_memory.save_preference(user_id, "activity_preference", activity_preference)
+    sqlite_memory.save_preference(user_id, "hotel_budget_per_night", str(hotel_budget))
+    sqlite_memory.save_preference(user_id, "total_budget", str(total_budget))
+
+    return (
+        f"Preferences saved for user: {user_id}",
+        sqlite_memory.format_preferences_for_agent(user_id)
+    )
+
+
+def reset_user_preferences(user_id):
+    if not user_id:
+        return "Please enter a user ID before resetting preferences.", "No user selected."
+
+    sqlite_memory.clear_preferences(user_id)
+
+    return (
+        f"Preferences reset for user: {user_id}",
+        sqlite_memory.format_preferences_for_agent(user_id)
+    )
+
+
+def chat_with_agent(message, history, user_id):
     session_memory.update_from_message(message)
-    memory_summary = session_memory.get_memory_summary()
+
+    session_summary = session_memory.get_memory_summary()
+    sqlite_summary = sqlite_memory.format_preferences_for_agent(user_id)
+
+    memory_summary = f"""
+Session memory:
+{session_summary}
+
+Saved profile preferences:
+{sqlite_summary}
+"""
 
     parser_input = f"""
     User message:
     {message}
 
-    Saved user preferences from this session:
+    Saved user preferences:
     {memory_summary}
     """
 
@@ -98,7 +152,7 @@ with gr.Blocks(title="Agentic Holiday Planner") as demo:
 
         **P - Plan:** Understands the user's trip request.  
         **R - Reason:** Compares flights, hotels, itinerary, and budget.  
-        **M - Memory:** Remembers user travel preferences during the session.  
+        **M - Memory:** Remembers user travel preferences during the session and through saved user profiles.  
         **A - Act:** Simulates booking after user approval.
 
         **Note:** This version uses mock flight and hotel data. Booking is simulated only.
@@ -111,7 +165,7 @@ with gr.Blocks(title="Agentic Holiday Planner") as demo:
 
             user_input = gr.Textbox(
                 label="Ask the holiday planner",
-                placeholder="Example: Plan a trip from Boston to Miami under $900."
+                placeholder="Example: Plan a trip from Boston to Miami."
             )
 
             with gr.Row():
@@ -119,6 +173,64 @@ with gr.Blocks(title="Agentic Holiday Planner") as demo:
                 clear_button = gr.Button("Clear Chat")
 
         with gr.Column(scale=1):
+            gr.Markdown("## Preference Manager")
+
+            user_id_input = gr.Textbox(
+                label="User ID",
+                value="tiyasa",
+                placeholder="Example: tiyasa"
+            )
+
+            flight_preference_dropdown = gr.Dropdown(
+                label="Flight Preference",
+                choices=["no preference", "nonstop", "cheapest", "shortest duration"],
+                value="nonstop"
+            )
+
+            travel_style_dropdown = gr.Dropdown(
+                label="Travel Style",
+                choices=["relaxed", "adventure", "luxury", "budget-friendly", "family-friendly"],
+                value="relaxed"
+            )
+
+            activity_preference_dropdown = gr.Dropdown(
+                label="Activity Preference",
+                choices=["general sightseeing", "beach", "food", "nightlife", "nature", "culture"],
+                value="beach"
+            )
+
+            hotel_budget_slider = gr.Slider(
+                label="Hotel Budget Per Night",
+                minimum=50,
+                maximum=500,
+                value=150,
+                step=10
+            )
+
+            total_budget_slider = gr.Slider(
+                label="Total Trip Budget",
+                minimum=300,
+                maximum=5000,
+                value=900,
+                step=50
+            )
+
+            with gr.Row():
+                save_preferences_button = gr.Button("Save Preferences")
+                reset_preferences_button = gr.Button("Reset Preferences")
+
+            preference_status_output = gr.Textbox(
+                label="Preference Status",
+                lines=2,
+                interactive=False
+            )
+
+            sqlite_memory_output = gr.Textbox(
+                label="Saved Profile Preferences",
+                lines=8,
+                interactive=False
+            )
+
             gr.Markdown("## Project Debug Panel")
 
             memory_output = gr.Textbox(
@@ -139,48 +251,110 @@ with gr.Blocks(title="Agentic Holiday Planner") as demo:
                 """
                 ### Try these prompts
 
-                1. `I prefer nonstop flights and relaxed beach vacations.`  
-                2. `Plan a trip from Boston to Miami under $900.`  
+                1. Save preferences from the Preference Manager.  
+                2. `Plan a trip from Boston to Miami.`  
                 3. `Yes, book the recommended option.`
                 """
             )
 
-    
-    def respond(message, chat_history):
+    def respond(message, chat_history, user_id):
         if chat_history is None:
             chat_history = []
 
-        response = chat_with_agent(message, chat_history)
+        response = chat_with_agent(message, chat_history, user_id)
 
         chat_history = chat_history + [
             {"role": "user", "content": message},
             {"role": "assistant", "content": response}
         ]
 
-        return "", chat_history, show_memory(), show_selected_trip()
+        return (
+            "",
+            chat_history,
+            show_memory(),
+            show_selected_trip(),
+            show_sqlite_memory(user_id)
+        )
 
     submit_button.click(
         respond,
-        inputs=[user_input, chatbot],
-        outputs=[user_input, chatbot, memory_output, selected_trip_output]
+        inputs=[user_input, chatbot, user_id_input],
+        outputs=[
+            user_input,
+            chatbot,
+            memory_output,
+            selected_trip_output,
+            sqlite_memory_output
+        ]
     )
 
     user_input.submit(
         respond,
-        inputs=[user_input, chatbot],
-        outputs=[user_input, chatbot, memory_output, selected_trip_output]
+        inputs=[user_input, chatbot, user_id_input],
+        outputs=[
+            user_input,
+            chatbot,
+            memory_output,
+            selected_trip_output,
+            sqlite_memory_output
+        ]
+    )
+
+    save_preferences_button.click(
+        save_user_preferences,
+        inputs=[
+            user_id_input,
+            flight_preference_dropdown,
+            travel_style_dropdown,
+            activity_preference_dropdown,
+            hotel_budget_slider,
+            total_budget_slider
+        ],
+        outputs=[
+            preference_status_output,
+            sqlite_memory_output
+        ]
+    )
+
+    reset_preferences_button.click(
+        reset_user_preferences,
+        inputs=[user_id_input],
+        outputs=[
+            preference_status_output,
+            sqlite_memory_output
+        ]
     )
 
     refresh_button.click(
-        fn=lambda: (show_memory(), show_selected_trip()),
-        inputs=[],
-        outputs=[memory_output, selected_trip_output]
+        fn=lambda user_id: (
+            show_memory(),
+            show_selected_trip(),
+            show_sqlite_memory(user_id)
+        ),
+        inputs=[user_id_input],
+        outputs=[
+            memory_output,
+            selected_trip_output,
+            sqlite_memory_output
+        ]
     )
 
     clear_button.click(
-        fn=lambda: ("", [], "No saved user preferences yet.", "No trip selected yet."),
+        fn=lambda: (
+            "",
+            [],
+            "No saved user preferences yet.",
+            "No trip selected yet.",
+            "No user selected."
+        ),
         inputs=[],
-        outputs=[user_input, chatbot, memory_output, selected_trip_output]
+        outputs=[
+            user_input,
+            chatbot,
+            memory_output,
+            selected_trip_output,
+            sqlite_memory_output
+        ]
     )
 
 
