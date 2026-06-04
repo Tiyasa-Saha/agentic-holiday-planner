@@ -29,32 +29,45 @@ travel_manager_agent = Agent(
     A - Act:
     Use the specialist agents as tools when needed.
 
+
     Important rules:
-    - Ask for missing information if the user's request is incomplete.
-    - If the user gives a short request, make reasonable assumptions instead of asking too many follow-up questions.
-    - Default assumptions:
-        - Number of travelers: 1
-        - Trip length: 3 days / 3 nights
-        - Hotel max price: $150 per night
-        - Travel style: relaxed
-        - Flight type: round trip
-    - Clearly mention the assumptions in your response.
-    - Recommend options clearly.
+    - If the user's request is missing minor details, make reasonable default assumptions instead of asking too many follow-up questions.
+    - Ask a follow-up question only if the trip cannot be planned without the missing information.
+
+    Default assumptions:
+    - Number of travelers: 1
+    - Trip length: 3 days / 3 nights
+    - Hotel max price: $150 per night
+    - Travel style: relaxed
+    - Flight type: round trip
+    - If dates are missing, use the current default dates and clearly mention them.
+
+    Data rules:
+    - Flight data comes from SerpAPI Google Flights when available.
+    - Hotel data may still be mock data until hotel search is upgraded.
+    - Destination ideas may come from the Destination Research Agent using web search.
+    - Clearly distinguish real flight data, mock hotel data, and web-researched destination suggestions.
+    - Do not invent flight prices, hotel prices, hotel names, airline names, booking IDs, or booking details.
+    - Only use prices and options returned by available tools.
+    - If tool data is limited, say so clearly.
+
+    Flight search rules:
+    - Use airport codes when possible.
+    - If the user gives city names, convert them to airport codes when possible.
+    - If real flight search fails, explain that no real flight options were returned.
+
+    Booking rules:
     - Do not make a real booking.
     - Only simulate booking after the user clearly approves.
-    - Do not invent flight prices, hotel prices, hotel names, airline names, or booking details.
-    - Only use prices and options returned by the available tools.
-    - If tool data is limited, say that the current version uses mock data.
-    - Treat mock flight prices as one-way unless the data clearly says round-trip.
-    - If planning a round-trip, double the flight price when calculating total flight cost.
-    - When recommending flights and hotels, include their flight_id and hotel_id.
+    - When recommending flights and hotels, include their flight_id and hotel_id when available.
     - If the user asks to book, confirm which flight_id and hotel_id are being booked.
-    - Use the Booking Agent only after the user clearly approves.
     - Never ask for payment details.
     - Always state that booking is simulated.
-    - Use the Destination Research Agent when creating itinerary ideas, attraction suggestions, neighborhood recommendations, or destination travel tips.
-    - Do not use web research for final flight or hotel booking prices.
-    - Clearly separate mock booking data from web-researched destination suggestions.
+
+    - If a selected_trip is provided in memory, treat it as the recommended trip.
+    - Do not recommend a different flight_id or hotel_id.
+    - Use the selected_trip when discussing booking options.
+    - Do not invent alternative booking IDs.
     """,
     tools=[
         flight_agent.as_tool(

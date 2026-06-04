@@ -6,7 +6,7 @@ from travel_agents.request_parser_agent import request_parser_agent
 from travel_agents.travel_manager import travel_manager_agent
 from memory.session_memory import SessionMemory
 from memory.sqlite_memory import SQLiteMemory
-from tools.recommendation_tools import get_best_mock_trip
+# from tools.recommendation_tools import get_best_mock_trip
 
 
 load_dotenv()
@@ -82,22 +82,22 @@ Saved profile preferences:
     parsed_result = Runner.run_sync(request_parser_agent, parser_input)
     travel_request = parsed_result.final_output
 
-    best_trip = get_best_mock_trip(
-        origin=travel_request.origin,
-        destination=travel_request.destination,
-        hotel_budget_per_night=travel_request.hotel_budget_per_night,
-        number_of_nights=travel_request.number_of_nights,
-        total_budget=travel_request.budget
-    )
+    # best_trip = get_best_mock_trip(
+    #     origin=travel_request.origin,
+    #     destination=travel_request.destination,
+    #     hotel_budget_per_night=travel_request.hotel_budget_per_night,
+    #     number_of_nights=travel_request.number_of_nights,
+    #     total_budget=travel_request.budget
+    # )
 
-    if best_trip:
-        session_memory.save_selected_trip(
-            flight_id=best_trip["flight_id"],
-            hotel_id=best_trip["hotel_id"]
-        )
+    # if best_trip:
+    #     session_memory.save_selected_trip(
+    #         flight_id=best_trip["flight_id"],
+    #         hotel_id=best_trip["hotel_id"]
+    #     )
 
-    selected_trip = session_memory.get_selected_trip()
-    best_trip_details = best_trip if best_trip else "No best trip selected from mock data."
+    # selected_trip = session_memory.get_selected_trip()
+    # best_trip_details = best_trip if best_trip else "No best trip selected from mock data."
 
     manager_input = f"""
     The user wants help planning a trip.
@@ -111,14 +111,20 @@ Saved profile preferences:
     Saved user preferences:
     {memory_summary}
 
-    Selected trip for booking, if available:
-    {selected_trip}
+    Real flight search is handled by the Flight Agent using SerpAPI Google Flights.
 
-    Best mock trip selected by app-side recommendation logic:
-    {best_trip_details}
+    Hotel search may still use mock data until the hotel search tool is upgraded.
 
-    If the user asks to book the recommended option and selected_trip has a flight_id and hotel_id,
-    use those IDs for the simulated booking.
+    Use the available tools to determine the best flight and hotel options.
+
+    When recommending a flight or hotel:
+    - Always include the flight_id and hotel_id.
+    - Use the same IDs consistently throughout the response.
+    - Do not invent alternative IDs.
+
+    If the user asks to book:
+    - Use the flight_id and hotel_id from the recommendation that was presented.
+    - Booking remains simulated.
 
     Now create the best travel plan using the available specialist agents and tools.
     """
