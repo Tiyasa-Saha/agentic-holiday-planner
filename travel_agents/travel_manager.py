@@ -44,9 +44,9 @@ travel_manager_agent = Agent(
 
     Data rules:
     - Flight data comes from SerpAPI Google Flights when available.
-    - Hotel data may still be mock data until hotel search is upgraded.
+    - Hotel data comes from SerpAPI Google Hotels when available.
     - Destination ideas may come from the Destination Research Agent using web search.
-    - Clearly distinguish real flight data, mock hotel data, and web-researched destination suggestions.
+    - Clearly distinguish real flight data, real hotel data, and web-researched destination suggestions.
     - Do not invent flight prices, hotel prices, hotel names, airline names, booking IDs, or booking details.
     - Only use prices and options returned by available tools.
     - If tool data is limited, say so clearly.

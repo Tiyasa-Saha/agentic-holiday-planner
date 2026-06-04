@@ -113,7 +113,7 @@ Saved profile preferences:
 
     Real flight search is handled by the Flight Agent using SerpAPI Google Flights.
 
-    Hotel search may still use mock data until the hotel search tool is upgraded.
+    Real hotel search is handled by the Hotel Agent using SerpAPI Google Hotels.
 
     Use the available tools to determine the best flight and hotel options.
 
@@ -161,7 +161,7 @@ with gr.Blocks(title="Agentic Holiday Planner") as demo:
         **M - Memory:** Remembers user travel preferences during the session and through saved user profiles.  
         **A - Act:** Simulates booking after user approval.
 
-        **Note:** This version uses mock flight and hotel data. Booking is simulated only.
+        **Note:** This version uses SerpAPI for real flight and hotel search. Booking is simulated only.
         """
     )
 

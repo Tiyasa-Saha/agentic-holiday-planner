@@ -73,3 +73,45 @@ def search_google_flights(
         )
 
     return response.json()
+
+
+def search_google_hotels(
+    destination: str,
+    check_in_date: str,
+    check_out_date: str,
+    adults: int = 1,
+    currency: str = "USD"
+) -> dict:
+    """
+    Search real hotel options using SerpAPI Google Hotels.
+    Dates must be in YYYY-MM-DD format.
+    """
+
+    api_key = os.getenv("SERPAPI_API_KEY")
+    base_url = os.getenv("SERPAPI_BASE_URL", "https://serpapi.com/search")
+
+    if not api_key:
+        raise ValueError("Missing SERPAPI_API_KEY in .env")
+
+    params = {
+        "engine": "google_hotels",
+        "q": f"hotels in {destination}",
+        "check_in_date": check_in_date,
+        "check_out_date": check_out_date,
+        "adults": adults,
+        "currency": currency,
+        "gl": "us",
+        "hl": "en",
+        "api_key": api_key
+    }
+
+    response = requests.get(base_url, params=params, timeout=30)
+
+    if response.status_code != 200:
+        raise Exception(
+            f"Google Hotels search failed. "
+            f"Status code: {response.status_code}. "
+            f"Response: {response.text}"
+        )
+
+    return response.json()
