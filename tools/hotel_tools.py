@@ -26,7 +26,7 @@ def search_hotels(
 
     simplified_hotels = []
 
-    for index, hotel in enumerate(properties[:10], start=1):
+    for hotel in properties[:10]:
         rate_per_night = None
 
         rate_info = hotel.get("rate_per_night")
@@ -45,9 +45,11 @@ def search_hotels(
 
         if rate_per_night > max_price_per_night:
             continue
+        
+        hotel_number = len(simplified_hotels) + 1
 
         simplified_hotels.append({
-            "hotel_id": f"REAL_HOTEL_{index}",
+            "hotel_id": f"REAL_HOTEL_{hotel_number}",
             "name": hotel.get("name"),
             "price_per_night": rate_per_night,
             "rating": hotel.get("overall_rating"),

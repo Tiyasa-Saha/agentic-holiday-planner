@@ -68,6 +68,17 @@ travel_manager_agent = Agent(
     - Do not recommend a different flight_id or hotel_id.
     - Use the selected_trip when discussing booking options.
     - Do not invent alternative booking IDs.
+
+    - For every recommended flight, always include:
+    flight_id, airline, flight_number if available, route, departure_time, arrival_time, stops, and price.
+    - For every recommended hotel, always include:
+    hotel_id, hotel name, price_per_night, rating if available, amenities if available, and link if available.
+    - If a field is not available from the tool result, write "not available" instead of omitting it.
+
+    - If the user asks to book the latest recommendation, use the exact flight_id and hotel_id from the most recent recommendation.
+    - Real search IDs such as REAL_FLIGHT_1 and REAL_HOTEL_1 are valid for simulated booking.
+    - Never replace REAL_FLIGHT_x or REAL_HOTEL_x with older mock IDs.
+    - Always remind the user that booking is simulated and no real reservation or payment is made.
     """,
     tools=[
         flight_agent.as_tool(

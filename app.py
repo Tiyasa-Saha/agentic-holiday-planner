@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 import gradio as gr
 from agents import Runner
+import re
 
 from travel_agents.request_parser_agent import request_parser_agent
 from travel_agents.travel_manager import travel_manager_agent
 from memory.session_memory import SessionMemory
 from memory.sqlite_memory import SQLiteMemory
-# from tools.recommendation_tools import get_best_mock_trip
 
 
 load_dotenv()
@@ -56,6 +56,15 @@ def reset_user_preferences(user_id):
         sqlite_memory.format_preferences_for_agent(user_id)
     )
 
+def save_recommended_ids_from_response(response_text):
+    flight_match = re.search(r"(REAL_FLIGHT_\d+|FL\d+)", response_text)
+    hotel_match = re.search(r"(REAL_HOTEL_\d+|HT\d+)", response_text)
+
+    if flight_match and hotel_match:
+        session_memory.save_selected_trip(
+            flight_id=flight_match.group(1),
+            hotel_id=hotel_match.group(1)
+        )
 
 def chat_with_agent(message, history, user_id):
     session_memory.update_from_message(message)
@@ -82,22 +91,7 @@ Saved profile preferences:
     parsed_result = Runner.run_sync(request_parser_agent, parser_input)
     travel_request = parsed_result.final_output
 
-    # best_trip = get_best_mock_trip(
-    #     origin=travel_request.origin,
-    #     destination=travel_request.destination,
-    #     hotel_budget_per_night=travel_request.hotel_budget_per_night,
-    #     number_of_nights=travel_request.number_of_nights,
-    #     total_budget=travel_request.budget
-    # )
-
-    # if best_trip:
-    #     session_memory.save_selected_trip(
-    #         flight_id=best_trip["flight_id"],
-    #         hotel_id=best_trip["hotel_id"]
-    #     )
-
-    # selected_trip = session_memory.get_selected_trip()
-    # best_trip_details = best_trip if best_trip else "No best trip selected from mock data."
+    selected_trip = session_memory.get_selected_trip()
 
     manager_input = f"""
     The user wants help planning a trip.
@@ -107,6 +101,11 @@ Saved profile preferences:
 
     Use this structured travel request:
     {travel_request.model_dump_json(indent=2)}
+
+    Latest selected trip stored in session memory:
+    {selected_trip}
+
+    If the user asks to book or simulate booking, use the stored flight_id and hotel_id from latest selected trip.
 
     Saved user preferences:
     {memory_summary}
@@ -130,7 +129,11 @@ Saved profile preferences:
     """
 
     final_result = Runner.run_sync(travel_manager_agent, manager_input)
-    return final_result.final_output
+    response_text = final_result.final_output
+
+    save_recommended_ids_from_response(response_text)
+
+    return response_text
 
 
 def show_memory():
